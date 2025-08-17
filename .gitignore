@@ -32,7 +32,6 @@ build/
 ### VS Code ###
 .vscode/
 .env
-.env
 *.env
 
 # Docker volumes — don't commit
