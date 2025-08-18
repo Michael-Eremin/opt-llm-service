@@ -4,6 +4,7 @@ import com.example.opt_llm.repo.ChatRepository;
 import com.example.opt_llm.services.PostgresChatMemory;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
+import org.springframework.ai.chat.client.advisor.SimpleLoggerAdvisor;
 import org.springframework.ai.chat.client.advisor.api.Advisor;
 import org.springframework.ai.chat.client.advisor.vectorstore.QuestionAnswerAdvisor;
 import org.springframework.ai.chat.memory.ChatMemory;
@@ -39,8 +40,10 @@ public class OptLlmApplication {
 
 	@Bean
 	public ChatClient chatClient(ChatClient.Builder builder) {
-		return builder.defaultAdvisors(getHistoryAdvisor()
-				, getRagAdviser()
+		return builder.defaultAdvisors(
+				getHistoryAdvisor(),
+						SimpleLoggerAdvisor.builder().build()
+//				, getRagAdviser()
 				)
 				.build();
 	}
@@ -58,7 +61,7 @@ public class OptLlmApplication {
 
 	private ChatMemory getChatMemory() {
 		return PostgresChatMemory.builder()
-				.maxMessages(12)
+				.maxMessages(4)
 				.chatMemoryRepository(chatRepository)
 				.build();
 	}
