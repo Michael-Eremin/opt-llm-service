@@ -1,5 +1,6 @@
 package com.example.opt_llm;
 
+import com.example.opt_llm.advisors.expension.ExpensionQueryAdvisor;
 import com.example.opt_llm.repo.ChatRepository;
 import com.example.opt_llm.services.PostgresChatMemory;
 import org.springframework.ai.chat.client.ChatClient;
@@ -8,6 +9,7 @@ import org.springframework.ai.chat.client.advisor.SimpleLoggerAdvisor;
 import org.springframework.ai.chat.client.advisor.api.Advisor;
 import org.springframework.ai.chat.client.advisor.vectorstore.QuestionAnswerAdvisor;
 import org.springframework.ai.chat.memory.ChatMemory;
+import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.chat.prompt.PromptTemplate;
 import org.springframework.ai.ollama.api.OllamaOptions;
 import org.springframework.ai.vectorstore.SearchRequest;
@@ -38,14 +40,18 @@ public class OptLlmApplication {
 	@Autowired
 	private VectorStore vectorStore;
 
+	@Autowired
+	private ChatModel chatModel;
+
 
 	@Bean
 	public ChatClient chatClient(ChatClient.Builder builder) {
 		return builder.defaultAdvisors(
-				getHistoryAdvisor(),
-						SimpleLoggerAdvisor.builder().build(),
-						getRagAdviser(),
-						SimpleLoggerAdvisor.builder().build()
+						ExpensionQueryAdvisor.builder(chatModel).order(0).build(),
+				getHistoryAdvisor(1),
+						SimpleLoggerAdvisor.builder().order(2).build(),
+						getRagAdviser(3),
+						SimpleLoggerAdvisor.builder().order(4).build()
 				)
 				.defaultOptions(
 						OllamaOptions.builder()
@@ -69,7 +75,7 @@ public class OptLlmApplication {
 				.build();
 	}
 
-	private Advisor getRagAdviser() {
+	private Advisor getRagAdviser(int order) {
 		return QuestionAnswerAdvisor.builder(vectorStore).promptTemplate(MY_PROMPT_TEMPLATE).searchRequest(
 				SearchRequest.builder()
 //						Сколько взять чанков
@@ -78,12 +84,12 @@ public class OptLlmApplication {
 //						как topP в chatClient для токенов, а этот для чанков
 						.similarityThreshold(0.65)
 						.build()
-		).build();
+		).order(order).build();
 	}
 
 
-	private Advisor getHistoryAdvisor() {
-		return MessageChatMemoryAdvisor.builder(getChatMemory()).order(-10).build();
+	private Advisor getHistoryAdvisor(int order) {
+		return MessageChatMemoryAdvisor.builder(getChatMemory()).order(order).build();
 	}
 
 	private ChatMemory getChatMemory() {
