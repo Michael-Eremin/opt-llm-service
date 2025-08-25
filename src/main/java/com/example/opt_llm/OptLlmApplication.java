@@ -1,6 +1,7 @@
 package com.example.opt_llm;
 
 import com.example.opt_llm.advisors.expension.ExpensionQueryAdvisor;
+import com.example.opt_llm.advisors.expension.rag.RagAdvisor;
 import com.example.opt_llm.repo.ChatRepository;
 import com.example.opt_llm.services.PostgresChatMemory;
 import org.springframework.ai.chat.client.ChatClient;
@@ -50,7 +51,9 @@ public class OptLlmApplication {
 						ExpensionQueryAdvisor.builder(chatModel).order(0).build(),
 				getHistoryAdvisor(1),
 						SimpleLoggerAdvisor.builder().order(2).build(),
-						getRagAdviser(3),
+
+//						getRagAdviser(3),
+						RagAdvisor.build(vectorStore).order(3).build(),
 						SimpleLoggerAdvisor.builder().order(4).build()
 				)
 				.defaultOptions(
