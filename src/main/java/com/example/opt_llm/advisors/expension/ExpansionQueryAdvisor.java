@@ -41,15 +41,6 @@ public class ExpansionQueryAdvisor implements BaseAdvisor {
                     "что такое свойство квадрата" -> "что такое свойство числа a * a"
                     """).build();
 
-//    private static final PromptTemplate template = PromptTemplate.builder()
-//            .template("""
-//                    Если запрос содержит "из алгебры", переформулируй запрос так, чтобы вместо этого словосочетания было "из геометрии".
-//                    Если этого словосочетания в запросе нет, то верни запрос неизмененным.
-//
-//                    Question: {question}
-//                    Reformulated:
-//                    """).build();
-
 
 
     public static final String ENRICHED_QUESTION = "ENRICHED_QUESTION";
