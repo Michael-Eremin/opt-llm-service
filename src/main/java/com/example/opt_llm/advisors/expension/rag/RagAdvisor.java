@@ -27,6 +27,10 @@ public class RagAdvisor implements BaseAdvisor {
 
     private VectorStore vectorStore;
 
+    @Builder.Default
+//    private SearchRequest searchRequest = SearchRequest.builder().topK(1).similarityThreshold(0.62).build();
+    private SearchRequest searchRequest = SearchRequest.builder().topK(4).similarityThreshold(0.62).build();
+
     @Getter
     private final int order;
 
@@ -39,10 +43,18 @@ public class RagAdvisor implements BaseAdvisor {
 
         String originalUserQuestion = chatClientRequest.prompt().getUserMessage().getText();
         String queryToRag = chatClientRequest.context().getOrDefault(ENRICHED_QUESTION, originalUserQuestion).toString();
-        List<Document> documents = vectorStore.similaritySearch(SearchRequest.builder().query(queryToRag).topK(20).similarityThreshold(0.5).build());
+
+
+        // searchRequest.getTopK()*2 - для того, чтобы ближайшие к границе изначального topK тоже захватить для переранжирования
+        // после сортировки все отрежется до исходного topK (но в нем уже будет правильный ранк)
+
+        List<Document> documents = vectorStore.similaritySearch(SearchRequest.from(searchRequest).query(queryToRag).topK(searchRequest.getTopK()*2).build());
         if (documents == null || documents.isEmpty()) {
             return chatClientRequest.mutate().context("CONTEXT", "ТУТ ПУСТО - ни один документ моя собачка не обнаружила").build();
         }
+
+        BM25RerankEngine rerankEngine = BM25RerankEngine.builder().build();
+        documents = rerankEngine.rerank(documents, queryToRag, searchRequest.getTopK());
 
         String llmContext = documents.stream().map(Document::getText).collect(Collectors.joining(System.lineSeparator()));
 
